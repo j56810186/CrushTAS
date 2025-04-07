@@ -1,0 +1,114 @@
+      <div class="bg-white border rounded p-3 text-center">
+        <div id="loading-indicator" class="text-center text-muted mb-3">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="mt-2">正在載入影像，請稍候...</div>
+        </div>
+        <img id="frame-player" src="" style="display:none;" class="img-fluid rounded border w-75 mb-3" alt="Frame Preview">
+
+        <input type="range" id="frame-slider" class="form-range" min="0" max="{{ images|length|add:"-1" }}" value="0">
+        <div class="d-flex justify-content-between align-items-center mt-2">
+          <div>
+            <button class="btn btn-sm btn-outline-secondary me-1" id="btn-back">⏪ 快退</button>
+            <button class="btn btn-sm btn-outline-secondary me-1" id="btn-toggle">⏸ 暫停</button>
+            <button class="btn btn-sm btn-outline-secondary me-3" id="btn-forward">⏩ 快轉</button>
+            <span>倍速：</span>
+            <select id="speed-select" class="form-select form-select-sm d-inline-block w-auto">
+              <option value="0.5">0.5x</option>
+              <option value="1" selected>1x</option>
+              <option value="2">2x</option>
+            </select>
+          </div>
+          <small id="frame-index-display">第 1 張 / 共 {{ images|length }} 張</small>
+        </div>
+      </div>
+
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    $(function () {
+        const imageList = {{ images|safe }};
+        const folder = "{{ video_folder }}";
+        const $img = $('#frame-player');
+        const $slider = $('#frame-slider');
+        const $indexDisplay = $('#frame-index-display');
+
+        let currentIndex = 0;
+        let isPlaying = true;
+        let fps = 12;
+        let interval = 1000 / fps;
+        let timer = null;
+
+        // ✅ 預載圖片用
+        let loadedImages = {};
+        let imagesLoaded = 0;
+
+        function updateImage(index) {
+          const filename = imageList[index];
+          if (loadedImages[filename]) {
+            $img.attr('src', loadedImages[filename].src);
+          }
+          $indexDisplay.text(`第 ${index + 1} 張 / 共 ${imageList.length} 張`);
+        }
+
+        function advanceFrame(step = 1) {
+          currentIndex = (currentIndex + step + imageList.length) % imageList.length;
+          $slider.val(currentIndex);
+          updateImage(currentIndex);
+        }
+
+        function startPlayer() {
+          updateImage(currentIndex);
+          timer = setInterval(() => {
+            if (isPlaying) {
+              advanceFrame();
+            }
+          }, interval);
+        }
+
+        // ✅ 預載所有圖片
+        imageList.forEach((filename) => {
+          const img = new Image();
+          img.onload = () => {
+            loadedImages[filename] = img;
+            imagesLoaded++;
+            if (imagesLoaded === imageList.length) {
+              $('#loading-indicator').hide();  // 預載完成時隱藏
+              $('#frame-player').show();       // 顯示主圖片
+
+              startPlayer(); // 所有圖片載入完成才開始播放
+            }
+          };
+          img.src = `${folder}/${filename}`;
+        });
+
+        // 控制操作（略，照原本播放 / 暫停 / 快轉邏輯寫即可）
+        $('#frame-slider').on('input', function () {
+          currentIndex = parseInt($(this).val());
+          updateImage(currentIndex);
+        });
+
+        $('#btn-toggle').on('click', function () {
+          isPlaying = !isPlaying;
+          $(this).text(isPlaying ? '⏸ 暫停' : '▶️ 播放');
+        });
+
+        $('#btn-back').on('click', function () {
+          advanceFrame(-12);
+        });
+
+        $('#btn-forward').on('click', function () {
+          advanceFrame(12);
+        });
+
+        $('#speed-select').on('change', function () {
+          const speed = parseFloat($(this).val());
+          clearInterval(timer);
+          interval = 1000 / (fps * speed);
+          timer = setInterval(() => {
+            if (isPlaying) {
+              advanceFrame();
+            }
+          }, interval);
+        });
+    });
+</script>

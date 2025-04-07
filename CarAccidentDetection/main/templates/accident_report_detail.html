@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>事故報告詳情</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<!-- header -->
+{% include 'includes/header.html' %}
+
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-2 p-0">
+      {% include 'includes/sidebar.html' %}
+    </div>
+
+    <!-- 主內容 -->
+    <main class="col-md-10 p-4">
+      <h2 class="mb-4">📄 事故報告詳情</h2>
+
+      <div class="row">
+        <!-- 左側影像區 -->
+        <div class="col-md-8">
+            <div class="mb-4">
+              <h5>關鍵畫面 (Key Frame)</h5>
+              <img src="{{ report.accident.key_frame }}" alt="Key Frame" class="img-fluid rounded border">
+            </div>
+
+            <div class="mb-4">
+              <h5>事故影像預覽</h5>
+              {% include 'includes/video_preview_partial.html' with video_folder=report.accident.video_frame_folder %}
+            </div>
+        </div>
+
+        <!-- 右側資訊與報告 -->
+        <div class="col-md-4">
+          <div class="card mb-3">
+            <div class="card-header bg-warning">事故資訊</div>
+            <div class="card-body">
+              <p><strong>地點：</strong>{{ report.accident.location }}</p>
+              <p><strong>模型偵測時間：</strong>{{ report.accident.detected_time|date:"Y-m-d H:i:s" }}</p>
+              <p><strong>來源：</strong>{% if report.accident.is_verified %}人工確認{% else %}AI 初判{% endif %}</p>
+              <p><strong>報告生成時間：</strong>{{ report.generated_at|date:"Y-m-d H:i:s" }}</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header bg-info text-white">事故現場草圖</div>
+            <div class="card-body">
+                <img src="{{ report.scene_diagram }}" alt="Accident Scene Diagram" class="img-fluid rounded border"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+</body>
+</html>
